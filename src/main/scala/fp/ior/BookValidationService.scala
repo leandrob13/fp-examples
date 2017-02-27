@@ -1,14 +1,16 @@
 package fp.ior
 
-import cats.data.{Ior, ValidatedNel}
-import cats.syntax.cartesian._
+import cats.data.{Ior, NonEmptyList}
 import cats.syntax.semigroup._
-import cats.syntax.validated._
-import fp.ior.Genre.InvalidGenre
+import fp.Genre.InvalidGenre
+import fp.{Book, EmptyBookList, Error, Genre, InvalidBookParameter}
 
 import scala.util.matching.Regex
 
 trait BookValidationService {
+
+  private val isbnRegex: Regex =
+    """ISBN(?:-13)?:?\x20*(?=.{17}$)97(?:8|9)([ -])\d{1,5}\1\d{1,7}\1\d{1,6}\1\d$""".r
 
   def validateBooks(bs: List[Book]): IorNel[Error, Book] = bs match {
     case Nil => EmptyBookList("Book list was empty").toLeftIorNel
@@ -16,32 +18,34 @@ trait BookValidationService {
   }
 
   def validateBook(b: Book): IorNel[InvalidBookParameter, Book] = {
-    val validations = ( validateIsbn(b.isbn) |@|
-      validateTitle(b.author) |@|
-      validateTitle(b.title) |@|
-      validateGenre(b.genre) ) map {
-      case (isbn, author, title, genre) =>
-        Book(isbn, title, author, genre)
-    }
-    validations.fold(Ior.left, _.toRightIorNel)
+    val validations: Ior[InvalidBookParameter, NonEmptyList[Book]] = for {
+      i <-  validateIsbn(b.isbn)
+      a <-  validateAuthor(b.author)
+      t <-  validateTitle(b.title)
+      g <-  validateGenre(b.genre)
+    } yield NonEmptyList.of(Book(i, t, a, g))
+    validations.leftMap(NonEmptyList.of(_))
+  }
+  private def validateGenre(g: Genre): Ior[InvalidBookParameter, Genre] = g match {
+    case InvalidGenre => Ior.left(InvalidBookParameter("Book has invalid genre"))
+    case genre => Ior.right(genre)
   }
 
-  private def validateGenre(g: Genre): ValidatedNel[InvalidBookParameter, Genre] = g match {
-    case InvalidGenre => InvalidBookParameter("Book has invalid genre").invalidNel
-    case genre => genre.validNel
+  private def validateIsbn(isbn: String): Ior[InvalidBookParameter, String] = isbn match {
+    case isbnRegex(all @ _*) => Ior.right(isbn)
+    case _ => Ior.left(InvalidBookParameter("isbn has not a valid format"))
   }
 
-  private def validateIsbn(isbn: String): ValidatedNel[InvalidBookParameter, String] =
-    if (isbnRegex.findFirstIn(isbn).isEmpty) InvalidBookParameter("isbn has not a valid format").invalidNel
-    else isbn.validNel
+  private def validateTitle(title: String): Ior[InvalidBookParameter, String] =
+    if (title.isEmpty) Ior.left(InvalidBookParameter("title must not be empty"))
+    else Ior.right(title)
 
-  private def validateTitle(title: String): ValidatedNel[InvalidBookParameter, String] =
-    if (title.isEmpty) InvalidBookParameter("title must not be empty").invalidNel else title.validNel
+  private def validateAuthor(author: String): Ior[InvalidBookParameter, String] =
+    if (author.isEmpty) Ior.left(InvalidBookParameter("author must not be empty"))
+    else Ior.right(author)
 
-  private def validateAuthor(author: String): ValidatedNel[InvalidBookParameter, String] =
-    if (author.isEmpty) InvalidBookParameter("author must not be empty").invalidNel else author.validNel
 
-  lazy val isbnRegex: Regex =
-    """ISBN(?:-13)?:?\x20*(?=.{17}$)97(?:8|9)([ -])\d{1,5}\1\d{1,7}\1\d{1,6}\1\d$""".r
+
+
 
 }

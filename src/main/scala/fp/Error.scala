@@ -1,5 +1,4 @@
-package fp.ior
-
+package fp
 
 sealed trait Error extends Product with Serializable {
   val message: String

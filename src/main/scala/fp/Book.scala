@@ -1,5 +1,4 @@
-package fp.ior
-
+package fp
 
 case class Book(isbn: String, title: String, author: String, genre: Genre)
 
