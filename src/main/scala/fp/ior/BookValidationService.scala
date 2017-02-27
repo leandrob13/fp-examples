@@ -3,7 +3,7 @@ package fp.ior
 import cats.data.{Ior, NonEmptyList}
 import cats.syntax.semigroup._
 import fp.Genre.InvalidGenre
-import fp.{Book, EmptyBookList, Error, Genre, InvalidBookParameter}
+import fp.{Book, EmptyBookList, Error, Genre, InvalidParameter}
 
 import scala.util.matching.Regex
 
@@ -17,35 +17,33 @@ trait BookValidationService {
     case books => books map validateBook reduce (_ |+| _)
   }
 
-  def validateBook(b: Book): IorNel[InvalidBookParameter, Book] = {
-    val validations: Ior[InvalidBookParameter, NonEmptyList[Book]] = for {
+  def validateBook(b: Book): IorNel[InvalidParameter, Book] = {
+    val validations: IorNel[InvalidParameter, Book] = for {
       i <-  validateIsbn(b.isbn)
       a <-  validateAuthor(b.author)
       t <-  validateTitle(b.title)
       g <-  validateGenre(b.genre)
     } yield NonEmptyList.of(Book(i, t, a, g))
-    validations.leftMap(NonEmptyList.of(_))
+    validations
   }
-  private def validateGenre(g: Genre): Ior[InvalidBookParameter, Genre] = g match {
-    case InvalidGenre => Ior.left(InvalidBookParameter("Book has invalid genre"))
-    case genre => Ior.right(genre)
+  private def validateGenre(g: Genre): Ior[NonEmptyList[InvalidParameter], Genre] = g match {
+    case InvalidGenre =>
+      Ior.left(NonEmptyList.of(InvalidParameter("Book has invalid genre")))
+    case genre =>
+      Ior.right(genre)
   }
 
-  private def validateIsbn(isbn: String): Ior[InvalidBookParameter, String] = isbn match {
+  private def validateIsbn(isbn: String): Ior[NonEmptyList[InvalidParameter], String] = isbn match {
     case isbnRegex(all @ _*) => Ior.right(isbn)
-    case _ => Ior.left(InvalidBookParameter("isbn has not a valid format"))
+    case _ => Ior.left(NonEmptyList.of(InvalidParameter("isbn has not a valid format")))
   }
 
-  private def validateTitle(title: String): Ior[InvalidBookParameter, String] =
-    if (title.isEmpty) Ior.left(InvalidBookParameter("title must not be empty"))
+  private def validateTitle(title: String): Ior[NonEmptyList[InvalidParameter], String] =
+    if (title.isEmpty) Ior.left(NonEmptyList.of(InvalidParameter("title must not be empty")))
     else Ior.right(title)
 
-  private def validateAuthor(author: String): Ior[InvalidBookParameter, String] =
-    if (author.isEmpty) Ior.left(InvalidBookParameter("author must not be empty"))
+  private def validateAuthor(author: String): Ior[NonEmptyList[InvalidParameter], String] =
+    if (author.isEmpty) Ior.left(NonEmptyList.of(InvalidParameter("author must not be empty")))
     else Ior.right(author)
-
-
-
-
 
 }
