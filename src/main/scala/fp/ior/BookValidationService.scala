@@ -2,6 +2,7 @@ package fp.ior
 
 import cats.data.{Ior, NonEmptyList}
 import cats.syntax.semigroup._
+import cats.syntax.cartesian._
 import fp.Genre.InvalidGenre
 import fp.{Book, EmptyBookList, Error, Genre, InvalidParameter}
 
@@ -26,6 +27,16 @@ trait BookValidationService {
     } yield NonEmptyList.of(Book(i, t, a, g))
     validations
   }
+
+  def validateBookAp(b: Book): Ior[NonEmptyList[InvalidParameter], NonEmptyList[Book]] = (
+    validateIsbn(b.isbn) |@|
+      validateAuthor(b.author) |@|
+      validateTitle(b.title) |@|
+      validateGenre(b.genre) ) map {
+    case (isbn, author, title, genre) =>
+      NonEmptyList.of(Book(isbn, title, author, genre))
+  }
+
   private def validateGenre(g: Genre): Ior[NonEmptyList[InvalidParameter], Genre] = g match {
     case InvalidGenre =>
       Ior.left(NonEmptyList.of(InvalidParameter("Book has invalid genre")))
