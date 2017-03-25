@@ -23,15 +23,14 @@ trait BookValidationService {
     case books => books map validateBookAp reduce (_ |+| _)
   }
 
-  def validateBook(b: Book): IorNel[InvalidParameter, NonEmptyList[Book]] = {
-    val validations: IorNel[InvalidParameter, NonEmptyList[Book]] = for {
+  def validateBook(b: Book): IorNel[InvalidParameter, NonEmptyList[Book]] =
+    for {
       i <-  validateIsbn(b.isbn)
       a <-  validateAuthor(b.author)
       t <-  validateTitle(b.title)
       g <-  validateGenre(b.genre)
     } yield NonEmptyList.of(Book(i, t, a, g))
-    validations
-  }
+
 
   def validateBookAp(b: Book): IorNel[InvalidParameter, NonEmptyList[Book]] = (
     validateIsbn(b.isbn) |@|

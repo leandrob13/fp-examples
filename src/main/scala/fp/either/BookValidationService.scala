@@ -25,14 +25,13 @@ trait BookValidationService {
     case books => books map validateBookAp reduce (_ |+| _)
   }
 
-  def validateBook(b: Book): Either[InvalidParameter, NonEmptyList[Book]] = {
+  def validateBook(b: Book): Either[InvalidParameter, NonEmptyList[Book]] =
     for {
       i <- validateIsbn(b.isbn)
       a <- validateAuthor(b.author)
       t <- validateTitle(b.title)
       g <- validateGenre(b.genre)
     } yield NonEmptyList.of(Book(i, t, a, g))
-  }
 
   def validateBookAp(b: Book): Either[InvalidParameter, NonEmptyList[Book]] = (
     validateIsbn(b.isbn) |@|
