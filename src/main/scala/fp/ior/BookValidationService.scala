@@ -18,6 +18,11 @@ trait BookValidationService {
     case books => books map validateBook reduce (_ |+| _)
   }
 
+  def validateBooksAp(bs: List[Book]): IorNel[Error, Book] = bs match {
+    case Nil => EmptyBookList("Book list was empty").toLeftIorNel
+    case books => books map validateBookAp reduce (_ |+| _)
+  }
+
   def validateBook(b: Book): IorNel[InvalidParameter, Book] = {
     val validations: IorNel[InvalidParameter, Book] = for {
       i <-  validateIsbn(b.isbn)
