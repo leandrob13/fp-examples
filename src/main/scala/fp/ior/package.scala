@@ -7,7 +7,7 @@ import cats.data.{Ior, NonEmptyList}
   */
 package object ior {
 
-  type IorNel[A, B] = Ior[NonEmptyList[A], NonEmptyList[B]]
+  type IorNel[A, B] = Ior[NonEmptyList[A], B]
 
   implicit class OptionOps[A](val o: Option[A]) extends AnyVal {
 
@@ -18,6 +18,6 @@ package object ior {
 
     def toLeftIorNel[B]: IorNel[A, B] = Ior.left(NonEmptyList.of(a))
 
-    def toRightIorNel[B]: IorNel[B, A] = Ior.right(NonEmptyList.of(a))
+    def toRightIorNel[B]: IorNel[B, NonEmptyList[A]] = Ior.right(NonEmptyList.of(a))
   }
 }

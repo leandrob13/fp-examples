@@ -49,8 +49,7 @@ class BookValidationIorSpec extends WordSpec with Matchers with BookValidationSe
             InvalidParameter("isbn has not a valid format") :: Nil
           ),
           NonEmptyList(
-            Book("ISBN: 978-1-4028-9462-6","The Fountainhead","Ayn Rand",Genre.Fiction),
-            Book("ISBN-13 978-1-4028-9462-6","Atlas Shrugged","Ayn Rand",Genre.Fiction) :: Nil
+            theFountainhead, atlasShrugged :: Nil
           )
         )
       )
@@ -65,8 +64,7 @@ class BookValidationIorSpec extends WordSpec with Matchers with BookValidationSe
             InvalidParameter("title must not be empty") :: Nil
           ),
           NonEmptyList(
-            Book("ISBN: 978-1-4028-9462-6","The Fountainhead","Ayn Rand",Genre.Fiction),
-            Book("ISBN-13 978-1-4028-9462-6","Atlas Shrugged","Ayn Rand",Genre.Fiction) :: Nil
+            theFountainhead, atlasShrugged :: Nil
           )
         )
       )

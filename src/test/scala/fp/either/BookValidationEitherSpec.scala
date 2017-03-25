@@ -31,12 +31,12 @@ class BookValidationEitherSpec extends WordSpec with Matchers with BookValidatio
 
     "Fail fast error on a book" in {
       val validated = validateBook(titlelessBook)
-      validated should === (Left(InvalidParameter("title must not be empty")))//(Right(NonEmptyList(theFountainhead, Nil)))
+      validated should === (Left(InvalidParameter("title must not be empty")))
     }
 
     "Fail fast error a book applicative" in {
       val validated = validateBookAp(titlelessBook)
-      validated should === (Left(InvalidParameter("title must not be empty")))//(Right(NonEmptyList(theFountainhead, Nil)))
+      validated should === (Left(InvalidParameter("title must not be empty")))
     }
 
     "Fail fast error on books" in {

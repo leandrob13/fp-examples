@@ -25,12 +25,26 @@ class BookValidationValidatedSpec extends WordSpec with Matchers with BookValida
 
     "Accumulate errors on a book" in {
       val validated = validateBook(titlelessBook)
-      validated should === (Invalid(NonEmptyList(InvalidParameter("title must not be empty"), InvalidParameter("Book has invalid genre") :: Nil)))
+      validated should === (
+        Invalid(
+          NonEmptyList(
+            InvalidParameter("title must not be empty"),
+            InvalidParameter("Book has invalid genre") :: Nil
+          )
+        )
+      )
     }
 
     "Accumulate errors on books" in {
       val validatedBooks = validateBooks(List(titlelessBook, theCountOfMontecristo, theFountainhead))
-      validatedBooks should === (Invalid(NonEmptyList(InvalidParameter("title must not be empty"), InvalidParameter("Book has invalid genre") :: InvalidParameter("isbn has not a valid format") :: Nil)))
+      validatedBooks should === (
+        Invalid(
+          NonEmptyList(
+            InvalidParameter("title must not be empty"),
+            InvalidParameter("Book has invalid genre") :: InvalidParameter("isbn has not a valid format") :: Nil
+          )
+        )
+      )
     }
 
 
