@@ -20,6 +20,11 @@ trait BookValidationService {
     case books => books map validateBook reduce (_ |+| _)
   }
 
+  def validateBooksAp(bs: List[Book]): Either[Error, NonEmptyList[Book]] = bs match {
+    case Nil => EmptyBookList("Book list was empty").asLeft
+    case books => books map validateBookAp reduce (_ |+| _)
+  }
+
   def validateBook(b: Book): Either[InvalidParameter, NonEmptyList[Book]] = {
     for {
       i <- validateIsbn(b.isbn)
