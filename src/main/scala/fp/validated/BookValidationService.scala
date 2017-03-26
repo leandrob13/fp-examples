@@ -39,10 +39,10 @@ trait BookValidationService {
   }
 
   private def validateTitle(title: String): ValidatedNel[InvalidParameter, String] =
-    if (title.isEmpty) InvalidParameter("title must not be empty").invalidNel else title.validNel
+    if (Option(title).exists(_.isEmpty)) InvalidParameter("title must not be empty").invalidNel else title.validNel
 
   private def validateAuthor(author: String): ValidatedNel[InvalidParameter, String] =
-    if (author.isEmpty) InvalidParameter("author must not be empty").invalidNel else author.validNel
+    if (Option(author).exists(_.isEmpty)) InvalidParameter("author must not be empty").invalidNel else author.validNel
 
 }
 

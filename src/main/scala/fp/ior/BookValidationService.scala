@@ -54,11 +54,11 @@ trait BookValidationService {
   }
 
   private def validateTitle(title: String): IorNel[InvalidParameter, String] =
-    if (title.isEmpty) Ior.left(NonEmptyList.of(InvalidParameter("title must not be empty")))
+    if (Option(title).exists(_.isEmpty)) Ior.left(NonEmptyList.of(InvalidParameter("title must not be empty")))
     else Ior.right(title)
 
   private def validateAuthor(author: String): IorNel[InvalidParameter, String] =
-    if (author.isEmpty) Ior.left(NonEmptyList.of(InvalidParameter("author must not be empty")))
+    if (Option(author).exists(_.isEmpty)) Ior.left(NonEmptyList.of(InvalidParameter("author must not be empty")))
     else Ior.right(author)
 
 }

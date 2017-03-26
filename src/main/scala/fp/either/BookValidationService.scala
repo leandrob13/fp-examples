@@ -56,5 +56,5 @@ trait BookValidationService {
     if (Option(title).forall(_.isEmpty)) InvalidParameter("title must not be empty").asLeft else title.asRight
 
   private def validateAuthor(author: String): Either[InvalidParameter, String] =
-    if (author.isEmpty) InvalidParameter("author must not be empty").asLeft else author.asRight
+    if (Option(author).forall(_.isEmpty)) InvalidParameter("author must not be empty").asLeft else author.asRight
 }
