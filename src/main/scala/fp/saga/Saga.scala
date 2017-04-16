@@ -33,7 +33,14 @@ trait Saga[+A, +B] extends Product with Serializable {
   }
 }
 
-case class SagaT[A, B](t: Task[Saga[A, B]]) {
+case class SagaT[+A, +B](t: Task[Saga[A, B]]) {
+
+  def map[C](f: B => C) = SagaT {
+    t.map {
+      case Saga.Next(as, b) => Saga.Next(as, f(b))
+      case s @ Saga.Stop(_) => s
+    }
+  }
 
   def flatMap[AA >: A, C](f: B => SagaT[AA, C]): SagaT[AA, C] = {
     SagaT {

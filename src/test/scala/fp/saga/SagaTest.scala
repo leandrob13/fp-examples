@@ -1,6 +1,5 @@
-package fp
+package fp.saga
 
-import fp.saga.Saga
 import fp.saga.Saga.{Next, Stop}
 import monix.eval.Coeval
 import org.scalatest.{Matchers, WordSpec}
@@ -36,7 +35,8 @@ class SagaTest extends WordSpec with Matchers {
       } yield z
       //state changes how it should, no recovery until run
       start shouldBe 5
-      val done = res.run
+      val done: Either[Queue[Try[AnyVal]], Int] = res.run
+      println(s"DONE $done")
       //revert is applied and state should be the original
       start shouldBe 1
     }
