@@ -12,16 +12,19 @@ import scala.util.{Failure, Success, Try}
 trait Saga[+A, +B] extends Product with Serializable {
   import Saga._
 
-  def flatMap[AA >: A, C](f: B => Saga[AA, C]): Saga[AA, C] = {
-    this match {
-      case s @ Stop(_) => s
-      case Next(as, b) =>
-        f(b) match {
-          case Next(aas, bb) => Next(as ++ aas, bb)
-          case Stop(s) => Stop(as ++ s)
-        }
+  def map[C](f: B => C): Saga[A, C] = this match {
+    case Next(a, b) => Next(a, f(b))
+    case s @ Stop(_) => s
+  }
 
-    }
+  def flatMap[AA >: A, C](f: B => Saga[AA, C]): Saga[AA, C] = this match {
+    case s @ Stop(_) => s
+    case Next(as, b) =>
+      f(b) match {
+        case Next(aas, bb) => Next(as ++ aas, bb)
+        case Stop(s) => Stop(as ++ s)
+      }
+
   }
 
   def run: Either[Queue[Try[A]], B] = this match {
@@ -51,8 +54,8 @@ object Saga {
   case class Next[A, B](as: Queue[Coeval[A]], b: B) extends Saga[A, B]
   case class Stop[A](as: Queue[Coeval[A]]) extends Saga[A, Nothing]
 
-  def next[A, B](a: A, b: B): Saga[A, B] = Next(Queue(Coeval(a)), b)
-  def stop[A](a: A): Saga[A, Nothing] = Stop(Queue(Coeval(a)))
+  def next[A, B](a: => A, b: B): Saga[A, B] = Next(Queue(Coeval(a)), b)
+  def stop[A](a: => A): Saga[A, Nothing] = Stop(Queue(Coeval(a)))
 
   def fromTry[A, B](t: Try[B])(revert: A): Saga[A, B] = t match {
     case Success(s) => next(revert, s)
