@@ -1,8 +1,9 @@
 package fp.ior
 
-import cats.data.{Ior, NonEmptyList}
+import cats.data.{Ior, IorNel, NonEmptyList}
 import cats.syntax.semigroup._
-import cats.syntax.cartesian._
+import cats.syntax.apply._
+import cats.syntax.ior._
 import fp.Genre.InvalidGenre
 import fp.{Book, EmptyBookList, Error, Genre, InvalidParameter}
 
@@ -14,12 +15,12 @@ trait BookValidationService {
     """ISBN(?:-13)?:?\x20*(?=.{17}$)97(?:8|9)([ -])\d{1,5}\1\d{1,7}\1\d{1,6}\1\d$""".r
 
   def validateBooks(bs: List[Book]): IorNel[Error, NonEmptyList[Book]] = bs match {
-    case Nil => EmptyBookList("Book list was empty").toLeftIorNel
+    case Nil => NonEmptyList.of(EmptyBookList("Book list was empty")).leftIor
     case books => books map validateBook reduce (_ |+| _)
   }
 
   def validateBooksAp(bs: List[Book]): IorNel[Error, NonEmptyList[Book]] = bs match {
-    case Nil => EmptyBookList("Book list was empty").toLeftIorNel
+    case Nil => NonEmptyList.of(EmptyBookList("Book list was empty")).leftIor
     case books => books map validateBookAp reduce (_ |+| _)
   }
 
@@ -33,10 +34,10 @@ trait BookValidationService {
 
 
   def validateBookAp(b: Book): IorNel[InvalidParameter, NonEmptyList[Book]] = (
-    validateIsbn(b.isbn) |@|
-      validateAuthor(b.author) |@|
-      validateTitle(b.title) |@|
-      validateGenre(b.genre) ) map {
+    validateIsbn(b.isbn),
+      validateAuthor(b.author),
+      validateTitle(b.title),
+      validateGenre(b.genre) ).mapN {
     case (isbn, author, title, genre) =>
       NonEmptyList.of(Book(isbn, title, author, genre))
   }

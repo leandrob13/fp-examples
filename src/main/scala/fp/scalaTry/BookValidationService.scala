@@ -4,7 +4,7 @@ import cats.data.NonEmptyList
 import fp.{Book, Genre}
 import cats.instances.try_._
 import cats.syntax.semigroup._
-import cats.syntax.cartesian._
+import cats.syntax.apply._
 import scala.util.{Failure, Try}
 import scala.util.matching.Regex
 
@@ -33,10 +33,10 @@ trait BookValidationService {
     } yield NonEmptyList.of(Book(i, t, a, g))
 
   def validateBookAp(b: Book): Try[NonEmptyList[Book]] = (
-    validateIsbn(b.isbn) |@|
-      validateAuthor(b.author) |@|
-      validateTitle(b.title) |@|
-      validateGenre(b.genre) ) map {
+    validateIsbn(b.isbn),
+      validateAuthor(b.author),
+      validateTitle(b.title),
+      validateGenre(b.genre) ) mapN {
     case (isbn, author, title, genre) =>
       NonEmptyList.of(Book(isbn, title, author, genre))
   }

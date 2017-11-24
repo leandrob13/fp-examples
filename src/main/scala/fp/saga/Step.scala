@@ -40,9 +40,9 @@ trait Step[+A, +B] extends Product with Serializable {
 
 object Step {
 
-  case class Next[A, B](as: Queue[Coeval[A]], b: B) extends Step[A, B]
+  final case class Next[A, B](as: Queue[Coeval[A]], b: B) extends Step[A, B]
 
-  case class Stop[A](as: Queue[Coeval[A]]) extends Step[A, Nothing]
+  final case class Stop[A](as: Queue[Coeval[A]]) extends Step[A, Nothing]
 
   def next[A, B](a: => A, b: B): Step[A, B] =
     Next(Queue(Coeval.eval(a)), b)
@@ -56,7 +56,7 @@ object Step {
   }
 }
 
-case class Saga[+A, +B](t: Task[Step[A, B]]) {
+final case class Saga[+A, +B](t: Task[Step[A, B]]) {
 
   def map[C](f: B => C) =
     Saga {

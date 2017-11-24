@@ -1,7 +1,7 @@
 package fp.validated
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
-import cats.syntax.cartesian._
+import cats.syntax.apply._
 import cats.syntax.semigroup._
 import cats.syntax.validated._
 import fp.Genre.InvalidGenre
@@ -20,10 +20,10 @@ trait BookValidationService {
   }
 
   def validateBook(b: Book): ValidatedNel[InvalidParameter, NonEmptyList[Book]] = (
-    validateIsbn(b.isbn) |@|
-    validateAuthor(b.author) |@|
-    validateTitle(b.title) |@|
-    validateGenre(b.genre) ) map {
+    validateIsbn(b.isbn),
+    validateAuthor(b.author),
+    validateTitle(b.title),
+    validateGenre(b.genre) ) mapN {
     case (isbn, author, title, genre) =>
       NonEmptyList.of(Book(isbn, title, author, genre))
   }

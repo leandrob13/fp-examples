@@ -3,8 +3,8 @@ package fp.either
 import cats.data.NonEmptyList
 import cats.instances.either._
 import cats.syntax.either._
-import cats.syntax.cartesian._
 import cats.syntax.semigroup._
+import cats.syntax.apply._
 import fp.Genre.InvalidGenre
 import fp.{Book, EmptyBookList, Error, Genre, InvalidParameter}
 
@@ -33,14 +33,12 @@ trait BookValidationService {
       g <- validateGenre(b.genre)
     } yield NonEmptyList.of(Book(i, t, a, g))
 
-  def validateBookAp(b: Book): Either[InvalidParameter, NonEmptyList[Book]] = (
-    validateIsbn(b.isbn) |@|
-      validateAuthor(b.author) |@|
-      validateTitle(b.title) |@|
-      validateGenre(b.genre) ) map {
-    case (isbn, author, title, genre) =>
-      NonEmptyList.of(Book(isbn, title, author, genre))
-  }
+  def validateBookAp(b: Book): Either[InvalidParameter, NonEmptyList[Book]] =
+    (validateIsbn(b.isbn), validateAuthor(b.author), validateTitle(b.title), validateGenre(b.genre))
+    .mapN {
+      case (isbn: String, author: String, title: String, genre: Genre) =>
+        NonEmptyList.of(Book(isbn, title, author, genre))
+    }
 
   private def validateGenre(g: Genre): Either[InvalidParameter, Genre] = g match {
     case InvalidGenre => InvalidParameter("Book has invalid genre").asLeft
