@@ -1,3 +1,3 @@
 # fp-examples
 
-## Helpful fp examples using cats library
+## Helpful fp examples using cats and monix libraries
