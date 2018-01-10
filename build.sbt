@@ -13,9 +13,9 @@ scalacOptions ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.scalatest"                %% "scalatest"                % "3.0.1" % "test",
-  "org.typelevel"                %% "cats-core"                     % "1.0.0-RC1" withSources(),
-  "org.typelevel"                %% "cats-macros"                     % "1.0.0-RC1" withSources(),
-  "org.typelevel"                %% "cats-kernel"                     % "1.0.0-RC1" withSources(),
-  "io.monix" %% "monix" % "3.0.0-M2"
+  "org.typelevel"                %% "cats-core"                     % "1.0.1" withSources(),
+  "org.typelevel"                %% "cats-macros"                     % "1.0.1" withSources(),
+  "org.typelevel"                %% "cats-kernel"                     % "1.0.1" withSources(),
+  "io.monix" %% "monix" % "3.0.0-M3" withSources()
 )
 
