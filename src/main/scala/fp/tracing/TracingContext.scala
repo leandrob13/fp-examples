@@ -1,6 +1,7 @@
 package fp.tracing
 
 import monix.eval.{Task, TaskLocal}
+import monix.execution.misc.Local
 
 trait TracingContext {
 
@@ -15,9 +16,10 @@ trait TracingContextCompanion[T <: TracingContext] {
   val local: TaskLocal[T] = TaskLocal(default)
 
   def current: Task[T] =
-    local.read
+    local.read.map(Option(_).getOrElse(default))
 
-  def let[R](t: T)(task: Task[R]) =
+  def let[R](t: T)(task: Task[R]): Task[R] = {
     local.bind(t)(task)
+  }
 
 }
