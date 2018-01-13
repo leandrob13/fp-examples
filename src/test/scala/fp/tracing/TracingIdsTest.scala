@@ -10,40 +10,75 @@ import scala.concurrent.Future
 
 class TracingIdsTest extends WordSpec with MustMatchers with ScalaFutures with Inside {
 
+  implicit val scheduler: Scheduler = Scheduler.global
+
+  implicit val opts: Task.Options = Task.defaultOptions.enableLocalContextPropagation
+
   val tracing = TracingIds.default.copy(ids = Map("transaction" -> "1234"))
 
   "TracingIds" should {
-    "propagate task" in {
-      implicit val scheduler: Scheduler = Scheduler.global
 
-      implicit val opts = Task.defaultOptions.enableLocalContextPropagation
-      println(s"A ${Thread.currentThread().getName}")
+    "asCurrent propagates task without async boundary" in {
 
-      //val t = tracing.asCurrent(Task.fork(TracingIdsTest.checkTask("transaction")))
       val t = tracing.asCurrent(TracingIdsTest.checkTask("transaction"))
 
-      println(s"======Before ${TracingIds.current.coeval.value}")
-      whenReady(tracing.execute(TracingIdsTest.checkTask("transaction"))) { res =>
-        println(s"A ${Thread.currentThread().getName}")
+      TracingIds.current.coeval.value mustBe Right(TracingIds.default)
+
+      whenReady(t.runAsyncOpt) { res =>
         res must matchPattern { case Some("1234") => }
       }
-      println(s"======Aafter ${TracingIds.current.coeval.value}")
+
+      TracingIds.current.coeval.value mustBe Right(TracingIds.default)
     }
 
-    /*"not propagate task" in {
-      implicit val scheduler: Scheduler = Scheduler.global
+    "asCurrent propagates task with async boundary" in {
 
-      implicit val opts = Task.defaultOptions.disableLocalContextPropagation
+      val t = tracing.asCurrent(TracingIdsTest.checkTask("transaction").executeWithFork)
 
-      val fut = TracingIdsTest.checkTask("transaction")//.runAsyncOpt
-      whenReady(fut.runAsync) { res =>
+      TracingIds.current.coeval.value mustBe Right(TracingIds.default)
+
+      whenReady(t.runAsyncOpt) { res =>
+        res must matchPattern { case Some("1234") => }
+      }
+
+      TracingIds.current.coeval.value mustBe Right(tracing)
+    }
+
+    "execute propagates task without async boundary" in {
+
+      val t = tracing.execute(TracingIdsTest.checkTask("transaction"))
+
+      TracingIds.current.coeval.value mustBe Right(TracingIds.default)
+
+      whenReady(t) { res =>
+        res must matchPattern { case Some("1234") => }
+      }
+
+      TracingIds.current.coeval.value mustBe Right(TracingIds.default)
+    }
+
+    "execute propagates task with async boundary" in {
+
+      val t = tracing.execute(TracingIdsTest.checkTask("transaction").executeWithFork)
+
+      TracingIds.current.coeval.value mustBe Right(TracingIds.default)
+
+      whenReady(t) { res =>
+        res must matchPattern { case Some("1234") => }
+      }
+
+      TracingIds.current.coeval.value mustBe Right(TracingIds.default)
+    }
+
+    "not propagate task" in {
+
+      val t = TracingIdsTest.checkTask("transaction")
+      whenReady(t.runAsyncOpt) { res =>
         res must matchPattern { case None => }
       }
-    }*/
+    }
 
-    /*"propagate future" in {
-      implicit val scheduler: Scheduler = Scheduler.global
-      implicit val opts = Task.defaultOptions.enableLocalContextPropagation
+    "propagate future" in {
 
       val fut = tracing.asCurrent(Task.deferFuture(TracingIdsTest.checkFuture("transaction")))
         .runAsyncOpt
@@ -51,25 +86,16 @@ class TracingIdsTest extends WordSpec with MustMatchers with ScalaFutures with I
       whenReady(fut) { res =>
         res must matchPattern { case Some("1234") => }
       }
-    }*/
+    }
   }
 
 }
 
 object TracingIdsTest {
 
-  def checkTask(id: String): Task[Option[String]] = {
-    TracingIds.current.asyncBoundary.map { t =>
-      println(s"B ${Thread.currentThread().getName}")
-      println(s"ids $id ${t.ids.get(id)}")
-      t.ids.get(id)
-    }
-  }
+  def checkTask(id: String): Task[Option[String]] =
+    TracingIds.current.map(_.ids.get(id))
 
-  def checkFuture(id: String)(implicit sch: Scheduler): Future[Option[String]] = {
-    TracingIds.current.runAsync.map { t =>
-      println(s"ids $id ${t.ids.get(id)}")
-      t.ids.get(id)
-    }
-  }
+  def checkFuture(id: String)(implicit sch: Scheduler): Future[Option[String]] =
+    TracingIds.current.runAsync.map(_.ids.get(id))
 }

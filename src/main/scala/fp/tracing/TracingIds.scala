@@ -7,15 +7,11 @@ case class TracingIds(ids: Map[String, String]) extends TracingContext {
   import TracingIds._
 
   def asCurrent[T](t: Task[T]): Task[T] =
-    TracingIds.let(this)(t)
+    TracingIds.bind(this)(t)
 
-  def execute[T](t: Task[T])(implicit sch: Scheduler): CancelableFuture[T] = {
-    try local.write(this)
-      .flatMap(_ => t.executeWithOptions(_.enableLocalContextPropagation))
-      .doOnFinish(_ => local.write(default))
-      .runAsync
+  def execute[T](t: Task[T])(implicit sch: Scheduler, opt: Task.Options): CancelableFuture[T] = {
+    try local.bind(this)(t).runAsyncOpt
     finally local.write(default).coeval.value
-
   }
 }
 
